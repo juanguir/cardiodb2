@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Grid CRUD con Scroll Virtual y Ordenación Completa - API NodeJS</title>
+  <style>
+    /* Mantengo todos los estilos existentes */
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Grid CRUD con Scroll Virtual y Ordenación Completa</h1>
+      <div class="toolbar">
+        <input id="search" type="text" placeholder="Buscar por cualquier campo" />
+        <button id="btnAdd">Nuevo</button>
+        <button id="btnExportCSV">Exportar CSV</button>
+        <button id="btnExportExcel">Exportar Excel</button>
+      </div>
+    </header>
+    <div class="card" id="gridContainer">
+      <table>
+        <thead>
+          <tr>
+            <th style="flex:none;width:90px;">Acciones</th>
+            <th data-field="name" style="flex:1;">Nombre</th>
+            <th data-field="email" style="flex:1;">Email</th>
+            <th data-field="role" style="flex:1;">Rol</th>
+            <th data-field="notes" style="flex:1;">Notas</th>
+          </tr>
+        </thead>
+        <tbody id="gridBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="modal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="modalTitle">Nuevo registro</h3>
+      <form id="form">
+        <input type="hidden" id="itemId" />
+        <div class="form-row">
+          <div style="flex:1">
+            <label for="name">Nombre</label>
+            <input id="name" type="text" required />
+          </div>
+          <div style="flex:1">
+            <label for="email">Email</label>
+            <input id="email" type="text" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div style="flex:1">
+            <label for="role">Rol</label>
+            <input id="role" type="text" placeholder="Ej: Administrador" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div style="flex:1">
+            <label for="notes">Notas</label>
+            <textarea id="notes" rows="3"></textarea>
+          </div>
+        </div>
+        <footer class="modal-actions">
+          <button type="button" id="btnCancel" class="ghost">Cancelar</button>
+          <button type="submit">Guardar</button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000/items';
+
+    let data = [], filterText = '', sortField = '', sortAsc = true;
+    const gridBody = document.getElementById('gridBody');
+    const gridContainer = document.getElementById('gridContainer');
+    const btnAdd = document.getElementById('btnAdd');
+    const btnExportCSV = document.getElementById('btnExportCSV');
+    const btnExportExcel = document.getElementById('btnExportExcel');
+    const modal = document.getElementById('modal');
+    const form = document.getElementById('form');
+    const modalTitle = document.getElementById('modalTitle');
+    const btnCancel = document.getElementById('btnCancel');
+    const searchInput = document.getElementById('search');
+    const itemIdInput = document.getElementById('itemId');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const roleInput = document.getElementById('role');
+    const notesInput = document.getElementById('notes');
+
+    const ROW_HEIGHT = 40;
+    const BUFFER = 10;
+    let visibleData = [];
+
+    async function loadData(){
+      const res = await fetch(API_URL);
+      data = await res.json();
+      renderVisibleRows();
+    }
+
+    async function saveItem(item){
+      if(item.id){
+        await fetch(`${API_URL}/${item.id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(item) });
+      } else {
+        await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(item) });
+      }
+      await loadData();
+    }
+
+    async function deleteItem(id){
+      await fetch(`${API_URL}/${id}`, { method:'DELETE' });
+      await loadData();
+    }
+
+    function escapeHtml(str){if(!str) return '';return String(str).replace(/[&<>'"`]+/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"})[s]);}
+
+    function filterAndSort(){
+      visibleData = data.filter(item=>{
+        const t = filterText.trim().toLowerCase();
+        if(!t) return true;
+        return ['name','email','role','notes'].some(f=> (item[f]||'').toLowerCase().includes(t));
+      });
+      if(sortField){
+        visibleData.sort((a,b)=>{
+          let valA=(a[sortField]||'').toString().toLowerCase();
+          let valB=(b[sortField]||'').toString().toLowerCase();
+          return sortAsc?valA.localeCompare(valB):valB.localeCompare(valA);
+        });
+      }
+    }
+
+    function renderVisibleRows(){
+      filterAndSort();
+      const scrollTop = gridContainer.scrollTop;
+      const containerHeight = gridContainer.clientHeight;
+      const startIdx = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - BUFFER);
+      const endIdx = Math.min(visibleData.length, Math.ceil((scrollTop + containerHeight) / ROW_HEIGHT) + BUFFER);
+
+      gridBody.style.height = visibleData.length * ROW_HEIGHT + 'px';
+      gridBody.innerHTML='';
+      const fragment = document.createDocumentFragment();
+      for(let i=startIdx;i<endIdx;i++){
+        const row = visibleData[i];
+        const tr = document.createElement('tr');
+        tr.style.top=(i*ROW_HEIGHT)+'px';
+        tr.style.height=ROW_HEIGHT+'px';
+        tr.style.display='flex';
+        tr.dataset.id = row.id;
+        tr.addEventListener('mouseenter',()=>tr.classList.add('hovered'));
+        tr.addEventListener('mouseleave',()=>tr.classList.remove('hovered'));
+        tr.innerHTML=`<td class="actions">`+
+                       `<button class="btn-edit" data-id="${row.id}" title="Editar">✏️</button>`+
+                       `<button class="btn-delete" data-id="${row.id}" title="Eliminar">🗑️</button>`+
+                       `</td>`+
+                       `<td style="flex:1;min-width:0">${escapeHtml(row.name)}</td>`+
+                       `<td style="flex:1;min-width:0">${escapeHtml(row.email)}</td>`+
+                       `<td style="flex:1;min-width:0">${escapeHtml(row.role)}</td>`+
+                       `<td style="flex:1;min-width:0">${escapeHtml(row.notes)}</td>`;
+        fragment.appendChild(tr);
+      }
+      gridBody.appendChild(fragment);
+
+      gridBody.querySelectorAll('.btn-edit').forEach(btn=>btn.addEventListener('click',()=>openEdit(Number(btn.dataset.id))));
+      gridBody.querySelectorAll('.btn-delete').forEach(btn=>btn.addEventListener('click',async e=>{if(confirm('¿Eliminar este registro?')) await deleteItem(Number(e.currentTarget.dataset.id));}));
+    }
+
+    document.querySelectorAll('thead th[data-field]').forEach(th=>{
+      th.addEventListener('click',()=>{
+        const field = th.dataset.field;
+        if(sortField === field){
+          sortAsc = !sortAsc;
+        } else {
+          sortField = field;
+          sortAsc = true;
+        }
+        renderVisibleRows();
+      });
+    });
+
+    gridContainer.addEventListener('scroll', renderVisibleRows);
+
+    function openEdit(id){
+      const item = data.find(d=>d.id===id);
+      if(!item) return;
+      itemIdInput.value=item.id;
+      nameInput.value=item.name||'';
+      emailInput.value=item.email||'';
+      roleInput.value=item.role||'';
+      notesInput.value=item.notes||'';
+      modalTitle.textContent='Editar registro';
+      showModal(true);
+    }
+
+    function openNew(){
+      itemIdInput.value='';
+      nameInput.value='';
+      emailInput.value='';
+      roleInput.value='';
+      notesInput.value='';
+      modalTitle.textContent='Nuevo registro';
+      showModal(true);
+    }
+
+    function showModal(show){modal.style.display=show?'flex':'none'; modal.setAttribute('aria-hidden',show?'false':'true'); if(show) nameInput.focus();}
+
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();
+      const payload = {name:nameInput.value.trim(), email:emailInput.value.trim(), role:roleInput.value.trim(), notes:notesInput.value.trim()};
+      if(!payload.name||!payload.email){alert('Nombre y email son obligatorios'); return;}
+      const idVal = itemIdInput.value?Number(itemIdInput.value):null;
+      if(idVal) payload.id=idVal;
+      await saveItem(payload);
+      showModal(false);
+    });
+
+    btnAdd.addEventListener('click',openNew);
+    btnCancel.addEventListener('click',()=>showModal(false));
+    modal.addEventListener('click',e=>{if(e.target===modal)showModal(false);});
+    searchInput.addEventListener('input',e=>{filterText=e.target.value;renderVisibleRows();});
+
+    loadData();
+  </script>
+</body>
+</html>

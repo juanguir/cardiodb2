@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Final CRUD SPA</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 0; }
+    nav { background: #333; color: white; padding: 10px; }
+    nav a { color: white; margin: 0 10px; text-decoration: none; }
+    #app { padding: 20px; opacity: 1; transition: opacity 0.2s ease; }
+    #app.fade-out { opacity: 0; }
+
+    /* Animaciones de lista */
+    .list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      margin: 6px 0;
+      border-radius: 8px;
+      background: #f5f5f5;
+      transform-origin: left center;
+      transition: transform 220ms ease, opacity 220ms ease, height 220ms ease, margin 220ms ease;
+      opacity: 1;
+      height: auto;
+    }
+
+    .list-item.enter {
+      opacity: 0;
+      transform: translateX(-10px) scale(0.995);
+    }
+
+    .list-item.enter.show {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+
+    .list-item.exit {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .list-item.exit.hide {
+      opacity: 0;
+      transform: translateX(10px) scale(0.98);
+      margin: 0;
+      height: 0;
+      padding: 0 12px;
+    }
+
+    /* Botones */
+    .delete-btn { background: #ff6b6b; border: none; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+    .edit-btn { background: #5bc0de; border: none; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer; margin-right: 8px; }
+
+    /* Search */
+    #search { padding: 8px 12px; width: 100%; max-width: 420px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/" data-link>Home</a>
+    <a href="/about" data-link>About</a>
+    <a href="/contact" data-link>Contact</a>
+    <a href="/user/new" data-link>Nuevo Usuario</a>
+  </nav>
+
+  <div id="app"></div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

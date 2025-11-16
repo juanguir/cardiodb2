@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Grid CRUD con Scroll Virtual y Ordenación Completa</title>
+  <style>
+    :root{--bg:#f6f7fb;--card:#ffffff;--accent:#2563eb;--danger:#ef4444;--muted:#6b7280;--hover:#e0f2fe}
+    *{box-sizing:border-box}
+    body{font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Arial; background:var(--bg); margin:0; padding:28px}
+    .container{max-width:980px;margin:0 auto}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:8px}
+    h1{font-size:20px;margin:0}
+    .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    button{background:var(--accent);color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
+    button.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,.12)}
+    input[type=text]{padding:8px;border-radius:8px;border:1px solid #e5e7eb}
+    .card{background:var(--card);padding:0 0 16px;border-radius:12px;box-shadow:0 6px 18px rgba(15,23,42,0.06); max-height:500px; overflow:auto;position:relative;}
+    table{width:100%;border-collapse:collapse;font-size:14px;}
+    thead, tbody{display:block;}
+    thead tr, tbody tr{display:flex;width:100%}
+    thead th, tbody td{padding:10px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    thead th{background:var(--card);border-bottom:1px solid #eef2ff;color:var(--muted);cursor:pointer;}
+    tbody{position:relative;}
+    tbody td{border-bottom:1px solid #f3f4f6;}
+    .actions{flex:none;display:flex;gap:8px;min-width:90px;}
+    .btn-edit{background:#f59e0b;color:#fff;padding:6px 8px;border-radius:8px;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .btn-delete{background:var(--danger);color:#fff;padding:6px 8px;border-radius:8px;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    tr.hovered{background:var(--hover)}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.5);display:none;align-items:center;justify-content:center}
+    .modal{background:var(--card);width:100%;max-width:520px;padding:18px;border-radius:12px}
+    .form-row{display:flex;gap:8px;margin-bottom:10px}
+    .form-row input, .form-row textarea{flex:1;padding:8px;border-radius:8px;border:1px solid #e5e7eb}
+    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+    footer.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+    @media (max-width:640px){.form-row{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Grid CRUD con Scroll Virtual y Ordenación Completa</h1>
+      <div class="toolbar">
+        <input id="search" type="text" placeholder="Buscar por cualquier campo" />
+        <button id="btnAdd">Nuevo</button>
+        <button id="btnExportCSV">Exportar CSV</button>
+        <button id="btnExportExcel">Exportar Excel</button>
+      </div>
+    </header>
+    <div class="card" id="gridContainer">
+      <table>
+        <thead>
+          <tr>
+            <th style="flex:none;width:90px;">Acciones</th>
+            <th data-field="name" style="flex:1;">Nombre</th>
+            <th data-field="email" style="flex:1;">Email</th>
+            <th data-field="role" style="flex:1;">Rol</th>
+            <th data-field="notes" style="flex:1;">Notas</th>
+          </tr>
+        </thead>
+        <tbody id="gridBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="modal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="modalTitle">Nuevo registro</h3>
+      <form id="form">
+        <input type="hidden" id="itemId" />
+        <div class="form-row">
+          <div style="flex:1">
+            <label for="name">Nombre</label>
+            <input id="name" type="text" required />
+          </div>
+          <div style="flex:1">
+            <label for="email">Email</label>
+            <input id="email" type="text" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div style="flex:1">
+            <label for="role">Rol</label>
+            <input id="role" type="text" placeholder="Ej: Administrador" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div style="flex:1">
+            <label for="notes">Notas</label>
+            <textarea id="notes" rows="3"></textarea>
+          </div>
+        </div>
+        <footer class="modal-actions">
+          <button type="button" id="btnCancel" class="ghost">Cancelar</button>
+          <button type="submit">Guardar</button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'crudGridData_v5';
+    const defaultData = [];
+    for(let i=1;i<=10000;i++){ defaultData.push({id:i,name:`Nombre ${i}`,email:`user${i}@example.com`,role:'Usuario',notes:`Nota ${i}`}); }
+
+    let data = [], filterText = '', sortField = '', sortAsc = true;
+    const gridBody = document.getElementById('gridBody');
+    const gridContainer = document.getElementById('gridContainer');
+    const btnAdd = document.getElementById('btnAdd');
+    const btnExportCSV = document.getElementById('btnExportCSV');
+    const btnExportExcel = document.getElementById('btnExportExcel');
+    const modal = document.getElementById('modal');
+    const form = document.getElementById('form');
+    const modalTitle = document.getElementById('modalTitle');
+    const btnCancel = document.getElementById('btnCancel');
+    const searchInput = document.getElementById('search');
+    const itemIdInput = document.getElementById('itemId');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const roleInput = document.getElementById('role');
+    const notesInput = document.getElementById('notes');
+
+    const ROW_HEIGHT = 40;
+    const BUFFER = 10;
+    let visibleData = [];
+
+    function loadData(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      try{data=raw?JSON.parse(raw):defaultData.slice();}catch(e){data=defaultData.slice();}
+    }
+
+    function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
+
+    function escapeHtml(str){if(!str) return '';return String(str).replace(/[&<>'"`]+/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"})[s]);}
+
+    function filterAndSort(){
+      visibleData = data.filter(item=>{
+        const t = filterText.trim().toLowerCase();
+        if(!t) return true;
+        return ['name','email','role','notes'].some(f=> (item[f]||'').toLowerCase().includes(t));
+      });
+      if(sortField){
+        visibleData.sort((a,b)=>{
+          let valA=(a[sortField]||'').toString().toLowerCase();
+          let valB=(b[sortField]||'').toString().toLowerCase();
+          return sortAsc?valA.localeCompare(valB):valB.localeCompare(valA);
+        });
+      }
+    }
+
+    function renderVisibleRows(){
+      filterAndSort();
+      const scrollTop = gridContainer.scrollTop;
+      const containerHeight = gridContainer.clientHeight;
+      const startIdx = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - BUFFER);
+      const endIdx = Math.min(visibleData.length, Math.ceil((scrollTop + containerHeight) / ROW_HEIGHT) + BUFFER);
+
+      gridBody.style.height = visibleData.length * ROW_HEIGHT + 'px';
+      gridBody.innerHTML='';
+      const fragment = document.createDocumentFragment();
+      for(let i=startIdx;i<endIdx;i++){
+        const row = visibleData[i];
+        const tr = document.createElement('tr');
+        tr.style.top=(i*ROW_HEIGHT)+'px';
+        tr.style.height=ROW_HEIGHT+'px';
+        tr.style.display='flex';
+        tr.dataset.id = row.id;
+        tr.addEventListener('mouseenter',()=>tr.classList.add('hovered'));
+        tr.addEventListener('mouseleave',()=>tr.classList.remove('hovered'));
+        tr.innerHTML=`<td class="actions">`+
+                       `<button class="btn-edit" data-id="${row.id}" title="Editar">✏️</button>`+
+                       `<button class="btn-delete" data-id="${row.id}" title="Eliminar">🗑️</button>`+
+                       `</td>`+
+                       `<td style="flex:1;min-width:0">${escapeHtml(row.name)}</td>`+
+                       `<td style="flex:1;min-width:0">${escapeHtml(row.email)}</td>`+
+                       `<td style="flex:1;min-width:0">${escapeHtml(row.role)}</td>`+
+                       `<td style="flex:1;min-width:0">${escapeHtml(row.notes)}</td>`;
+        fragment.appendChild(tr);
+      }
+      gridBody.appendChild(fragment);
+
+      gridBody.querySelectorAll('.btn-edit').forEach(btn=>btn.addEventListener('click',()=>openEdit(Number(btn.dataset.id))));
+      gridBody.querySelectorAll('.btn-delete').forEach(btn=>btn.addEventListener('click',handleDelete));
+    }
+
+    function handleDelete(e){
+      const id = Number(e.currentTarget.dataset.id);
+      if(confirm('¿Eliminar este registro?')){
+        data = data.filter(d=>d.id!==id);
+        saveData();
+        renderVisibleRows();
+      }
+    }
+
+    document.querySelectorAll('thead th[data-field]').forEach(th=>{
+      th.addEventListener('click',()=>{
+        const field = th.dataset.field;
+        if(sortField === field){
+          sortAsc = !sortAsc;
+        } else {
+          sortField = field;
+          sortAsc = true;
+        }
+        renderVisibleRows();
+      });
+    });
+
+    gridContainer.addEventListener('scroll', renderVisibleRows);
+
+    function nextId(){return data.length?Math.max(...data.map(d=>d.id))+1:1;}
+    function addItem(item){item.id=nextId();data.push(item);saveData();renderVisibleRows();}
+    function updateItem(id,newData){const idx=data.findIndex(d=>d.id===id);if(idx===-1)return;data[idx]=Object.assign({},data[idx],newData);saveData();renderVisibleRows();}
+
+    function openEdit(id){const item=data.find(d=>d.id===id);if(!item)return;itemIdInput.value=item.id;nameInput.value=item.name||'';emailInput.value=item.email||'';roleInput.value=item.role||'';notesInput.value=item.notes||'';modalTitle.textContent='Editar registro';showModal(true);}
+    function openNew(){itemIdInput.value='';nameInput.value='';emailInput.value='';roleInput.value='';notesInput.value='';modalTitle.textContent='Nuevo registro';showModal(true);}
+    function showModal(show){modal.style.display=show?'flex':'none';modal.setAttribute('aria-hidden',show?'false':'true');if(show)nameInput.focus();}
+
+    btnAdd.addEventListener('click',openNew);
+    btnCancel.addEventListener('click',()=>showModal(false));
+    modal.addEventListener('click',e=>{if(e.target===modal)showModal(false);});
+    form.addEventListener('submit',e=>{e.preventDefault();const idVal=itemIdInput.value?Number(itemIdInput.value):null;const payload={name:nameInput.value.trim(),email:emailInput.value.trim(),role:roleInput.value.trim(),notes:notesInput.value.trim()};if(!payload.name||!payload.email){alert('Nombre y email son obligatorios.');return;}if(idVal){updateItem(idVal,payload);}else{addItem(payload);}showModal(false);});
+
+    searchInput.addEventListener('input',e=>{filterText=e.target.value;renderVisibleRows();});
+
+    function downloadFile(blob, filename){
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    btnExportCSV.addEventListener('click',()=>{
+      if(!data.length){alert('No hay datos para exportar');return;}
+      const csvContent = data.map(d=>`"${d.name.replace(/"/g,'""')}","${d.email.replace(/"/g,'""')}","${d.role.replace(/"/g,'""')}","${d.notes.replace(/"/g,'""')}"`).join('\n');
+      const blob = new Blob([`Nombre,Email,Rol,Notas\n${csvContent}`], {type:'text/csv;charset=utf-8;'});
+      downloadFile(blob,'export.csv');
+    });
+
+    btnExportExcel.addEventListener('click',()=>{
+      if(!data.length){alert('No hay datos para exportar');return;}
+      let excelContent = `<table><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Notas</th></tr>`;
+      data.forEach(d=>{
+        excelContent += `<tr><td>${d.name}</td><td>${d.email}</td><td>${d.role}</td><td>${d.notes}</td></tr>`;
+      });
+      excelContent += '</table>';
+      const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' });
+      downloadFile(blob,'export.xls');
+    });
+
+    loadData();renderVisibleRows();
+    window.__crud={getAll:()=>data,save:saveData};
+  </script>
+</body>
+</html>
