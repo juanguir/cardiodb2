@@ -1,0 +1,37 @@
+{
+  "invencen_connection_db": {
+    "_enableStats": true,
+    "provide": "invencen_connection_db",
+    "user": "INVENCEN",
+    "password": "edunata#09",
+    "connectString": "eduora12c-rac-pro-bd-scan.edu.carm.es:1521/educapro.edu.carm.es"
+  },
+  "gic_connection_db": {
+    "_enableStats": true,
+    "provide": "gic_connection_db",
+    "user": "GIC",
+    "password": "GIC2009",
+    "connectString": "eduora12c-rac-pro-bd-scan.edu.carm.es:1521/educapro.edu.carm.es"
+  },
+  "controlaplic_connection_db": {
+    "_enableStats": true,
+    "provide": "controlaplic_connection_db",
+    "user": "CONTROLAPLIC",
+    "password": "ctraplyusr",
+    "connectString": "eduora12c-rac-pro-bd-scan.edu.carm.es:1521/educapro.edu.carm.es"
+  },
+  "cenmur_connection_db": {
+    "_enableStats": true,
+    "provide": "cenmur_connection_db",
+    "user": "centrosmur",
+    "password": "MURCIA",
+    "connectString": "eduora12c-rac-pro-bd-scan.edu.carm.es:1521/educapro.edu.carm.es"
+  },
+  "rcdmec_connection_db": {
+    "_enableStats": true,
+    "provide": "rcdmec_connection_db",
+    "user": "rcdmec",
+    "password": "rgstrcntrs#20",
+    "connectString": "eduora12c-rac-pro-bd-scan.edu.carm.es:1521/educapro.edu.carm.es"
+  }
+}

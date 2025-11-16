@@ -1,0 +1,36 @@
+{
+    "propertiesFiles": {
+        "files": {
+            "database": "./properties-database.json",
+            "user": "./properties-user.json"
+        }
+    },
+    "PORT_APP": "3003",
+    "aplicacion": {
+        "nombre": "CENTROS"
+    },
+    "cas": {
+        "cas_url": "https://caspruebas.murciaeduca.es/cas",
+        "session_info": "cas_userinfo",
+        "session_name": "cas_user",
+        "default_route": "home",
+        "destroy_session": true
+    },
+    "log": {
+        "nivel": "debug",
+        "graylog": {
+            "host": "udp:graylog.edu.carm.es",
+            "port": 12301
+        }
+    },
+    "session": {
+        "name": "session_cookie_name",
+        "secret": "session_cookie_secret",
+        "cookie": {
+            "secure": false
+        }
+    },
+    "jacinta": {
+        "jacinta_url_generacion": "https://caspruebas.murciaeduca.es/jacinta/services/generadorInformes"
+    }
+}

@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DB = void 0;
+exports.DB = {
+    users: [
+        { id: 1, name: 'John Doe', email: 'john@example.com', role: 'admin' },
+        { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'user' }
+    ],
+    orders: [
+        { id: '#001', customer: 'John', product: 'Laptop', status: 'Delivered', date: '2025-11-10' }
+    ]
+};
+//# sourceMappingURL=in-memory.datasource.js.map

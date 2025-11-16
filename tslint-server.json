@@ -1,0 +1,5 @@
+{
+    "extends": [
+        "carm-tslint/tslint-base"
+    ]
+}

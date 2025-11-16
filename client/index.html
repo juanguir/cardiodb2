@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Dashboard — Ultra (HTML/CSS/JS)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app" class="app">
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-top">
+        <h1 class="logo">MyAdmin</h1>
+        <button id="collapse-btn" class="icon-btn" title="Colapsar sidebar">«</button>
+      </div>
+      <nav class="nav">
+        <ul>
+          <li class="nav-item active" data-view="dashboard">🏠 Dashboard</li>
+          <li class="nav-item" data-view="analytics">📊 Analytics</li>
+          <li class="nav-item" data-view="users">👥 Users</li>
+          <li class="nav-item" data-view="calendar">📅 Calendar</li>
+          <li class="nav-item" data-view="settings">⚙️ Settings</li>
+        </ul>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="profile">
+          <img src="https://i.pravatar.cc/48" alt="avatar" class="avatar">
+          <div>
+            <div class="name">Admin</div>
+            <div class="role">Super Admin</div>
+          </div>
+        </div>
+        <div class="theme-controls">
+          <label>Color:</label>
+          <input id="primaryColor" type="color" value="#4cd137">
+          <label>Auto dark:</label>
+          <input id="autoDark" type="checkbox" checked>
+        </div>
+      </div>
+    </aside>
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="header-left">
+        <button id="menu-btn" class="menu-btn">☰</button>
+        <h2 id="page-title">Dashboard</h2>
+      </div>
+      <div class="header-right">
+        <div class="search-wrap">
+          <input id="search" placeholder="Buscar..." />
+        </div>
+        <button id="notif-btn" class="icon-btn">🔔<span id="notif-badge" class="badge hidden">3</span></button>
+        <div class="user-dropdown">
+          <img src="https://i.pravatar.cc/40" alt="user" class="avatar clickable" id="user-btn">
+          <div id="user-menu" class="dropdown hidden">
+            <button id="btn-profile">Mi perfil</button>
+            <button id="btn-logout">Cerrar sesión</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main">
+      <!-- VIEWS SPA-style -->
+      <section id="view-dashboard" class="view active">
+        <div class="grid cards">
+          <div class="card">
+            <div class="card-head">Total Users</div>
+            <div class="card-body"><span id="stat-users">1,240</span></div>
+          </div>
+          <div class="card">
+            <div class="card-head">Revenue</div>
+            <div class="card-body">$<span id="stat-revenue">12,450</span></div>
+          </div>
+          <div class="card">
+            <div class="card-head">Orders</div>
+            <div class="card-body"><span id="stat-orders">320</span></div>
+          </div>
+          <div class="card">
+            <div class="card-head">Conversion</div>
+            <div class="card-body"><span id="stat-conv">3.2%</span></div>
+          </div>
+        </div>
+
+        <div id="panels" class="grid panels" data-draggable="true">
+          <div class="panel" draggable="true" data-panel="bar">
+            <div class="panel-head">
+              <h3>Barras: Ventas mensuales</h3>
+              <div>
+                <button class="icon-btn small download" data-target="barChart">📸</button>
+                <button class="icon-btn small collapse">—</button>
+              </div>
+            </div>
+            <div class="panel-body">
+              <canvas id="barChart" width="700" height="260"></canvas>
+            </div>
+          </div>
+
+          <div class="panel" draggable="true" data-panel="line">
+            <div class="panel-head">
+              <h3>Línea: Ingresos</h3>
+              <div>
+                <button class="icon-btn small download" data-target="lineChart">📸</button>
+                <button class="icon-btn small collapse">—</button>
+              </div>
+            </div>
+            <div class="panel-body">
+              <canvas id="lineChart" width="700" height="260"></canvas>
+            </div>
+          </div>
+
+          <div class="panel" draggable="true" data-panel="pie">
+            <div class="panel-head">
+              <h3>Pastel: Categorías</h3>
+              <div>
+                <button class="icon-btn small download" data-target="pieChart">📸</button>
+                <button class="icon-btn small collapse">—</button>
+              </div>
+            </div>
+            <div class="panel-body">
+              <canvas id="pieChart" width="420" height="260"></canvas>
+            </div>
+          </div>
+
+          <div class="panel" draggable="true" data-panel="table">
+            <div class="panel-head">
+              <h3>Pedidos recientes</h3>
+              <div>
+                <button class="icon-btn small">🔁</button>
+                <button class="icon-btn small collapse">—</button>
+              </div>
+            </div>
+            <div class="panel-body">
+              <table class="table">
+                <thead><tr><th>ID</th><th>Cliente</th><th>Producto</th><th>Estado</th><th>Fecha</th></tr></thead>
+                <tbody id="orders-body">
+                  <tr><td>#001</td><td>John</td><td>Portátil</td><td class="tag delivered">Delivered</td><td>2025-11-10</td></tr>
+                  <tr><td>#002</td><td>Jane</td><td>Audífonos</td><td class="tag pending">Pending</td><td>2025-11-09</td></tr>
+                  <tr><td>#003</td><td>Mark</td><td>Cámara</td><td class="tag canceled">Canceled</td><td>2025-11-08</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-analytics" class="view">
+        <h2>Analytics</h2>
+        <p>Panel extra con filtros.</p>
+      </section>
+
+      <section id="view-users" class="view">
+        <h2>Users</h2>
+
+        <!-- Users management UI (CRUD) -->
+        <div class="users-controls">
+          <button id="btn-new-user" class="primary">+ Nuevo Usuario</button>
+          <input id="user-search" placeholder="Buscar usuario..." />
+        </div>
+
+        <div id="users-list" class="card" style="margin-top:12px; padding:12px;">
+          <table class="table" id="users-table">
+            <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead>
+            <tbody id="users-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="view-calendar" class="view">
+        <h2>Calendar</h2>
+        <div id="calendar" class="calendar"></div>
+      </section>
+
+      <section id="view-settings" class="view">
+        <h2>Settings</h2>
+        <p>Preferencias</p>
+      </section>
+    </main>
+
+    <footer class="footer">© <span id="year"></span> MyAdmin — Ultra Template</footer>
+  </div>
+
+  <!-- AUTH modal -->
+  <div id="auth" class="auth hidden">
+    <div class="auth-panel" id="auth-panel">
+      <button class="close-auth" id="close-auth">✕</button>
+      <div id="auth-views">
+        <div id="auth-login">
+          <h2>Iniciar sesión</h2>
+          <input id="login-user" placeholder="Usuario / Email" />
+          <input id="login-pass" type="password" placeholder="Contraseña" />
+          <button id="do-login" class="primary">Entrar</button>
+          <p><a href="#" id="show-register">Crear cuenta</a> • <a href="#" id="show-forgot">¿Olvidaste?</a></p>
+        </div>
+        <div id="auth-register" class="hidden">
+          <h2>Crear cuenta</h2>
+          <input id="reg-user" placeholder="Usuario" />
+          <input id="reg-email" placeholder="Email" />
+          <input id="reg-pass" type="password" placeholder="Contraseña" />
+          <button id="do-register" class="primary">Registrar</button>
+          <p><a href="#" id="show-login">¿Ya tienes cuenta?</a></p>
+        </div>
+        <div id="auth-forgot" class="hidden">
+          <h2>Recuperar contraseña</h2>
+          <input id="forgot-email" placeholder="Email" />
+          <button id="do-forgot" class="primary">Enviar</button>
+          <p><a href="#" id="show-login2">Volver</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for create/edit user -->
+  <div id="modal-user" class="auth hidden">
+    <div class="auth-panel">
+      <button class="close-auth" id="close-user-modal">✕</button>
+      <h3 id="modal-user-title">Nuevo usuario</h3>
+      <input id="modal-user-name" placeholder="Nombre" />
+      <input id="modal-user-email" placeholder="Email" />
+      <select id="modal-user-role">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button id="modal-user-save" class="primary">Guardar</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "invencen_connection_db": {
+    "_enableStats": true,
+    "provide": "invencen_connection_db",
+    "user": "INVENCEN",
+    "password": "pruebas2010",
+    "connectString": "eduora12c-pru-bd1.edu.carm.es:1521/educapru.edu.carm.es"
+  },
+  "gic_connection_db": {
+    "_enableStats": true,
+    "provide": "gic_connection_db",
+    "user": "GIC",
+    "password": "pruebas2010",
+    "connectString": "eduora12c-pru-bd1.edu.carm.es:1521/educapru.edu.carm.es"
+  },
+  "controlaplic_connection_db": {
+    "_enableStats": true,
+    "provide": "controlaplic_connection_db",
+    "user": "CONTROLAPLIC",
+    "password": "pruebas2010",
+    "connectString": "eduora12c-pru-bd1.edu.carm.es:1521/educapru.edu.carm.es"
+  },
+  "cenmur_connection_db": {
+    "_enableStats": true,
+    "provide": "cenmur_connection_db",
+    "user": "centrosmur",
+    "password": "pruebas2010",
+    "connectString": "eduora12c-pru-bd1.edu.carm.es:1521/educapru.edu.carm.es"
+  },
+  "rcdmec_connection_db": {
+    "_enableStats": true,
+    "provide": "rcdmec_connection_db",
+    "user": "rcdmec",
+    "password": "pruebas2010",
+    "connectString": "eduora12c-pru-bd1.edu.carm.es:1521/educapru.edu.carm.es"
+  }
+}
